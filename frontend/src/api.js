@@ -1,4 +1,4 @@
-const API_BASE = '/api'
+const API_BASE = 'https://rakshaconnect-backend.onrender.com/api'
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(`${API_BASE}${url}`, {
