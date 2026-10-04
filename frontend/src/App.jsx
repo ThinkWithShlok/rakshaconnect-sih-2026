@@ -29,8 +29,24 @@ const defaultRoutes = [
 ]
 
 function App() {
-  const [landing, setLanding] = useState(true)
-  const [role, setRole] = useState(null)
+  const storedUser = localStorage.getItem('raksha_user')
+
+const [landing, setLanding] = useState(storedUser ? false : true)
+const [role, setRole] = useState(() => {
+  try {
+    return storedUser ? JSON.parse(storedUser).role : null
+  } catch {
+    return null
+  }
+})
+
+const [loginForm, setLoginForm] = useState({
+  username: '',
+  password: '',
+})
+
+const [loginError, setLoginError] = useState('')
+const [loginLoading, setLoginLoading] = useState(false)
   const roles = [
   {
     name: 'Command / Admin',
@@ -103,6 +119,38 @@ const rolePermissions = {
   const [scenarioResult, setScenarioResult] = useState(null)
   const [shipmentPlan, setShipmentPlan] = useState({ source: 'Central Depot A', destination: 'Forward Base Alpha', supply: 'Fuel', quantity: 7500 })
   const [mapSelection, setMapSelection] = useState('Forward Base Alpha')
+  const handleLogin = async (event) => {
+  event.preventDefault()
+
+  setLoginError('')
+  setLoginLoading(true)
+
+  try {
+    const result = await api.login({
+      username: loginForm.username,
+      password: loginForm.password,
+      role,
+    })
+
+    localStorage.setItem('raksha_user', JSON.stringify(result.user))
+
+    setRole(result.user.role)
+    setPage('Dashboard')
+    setLanding(false)
+    setLoginForm({
+      username: '',
+      password: '',
+    })
+  } catch (error) {
+    setLoginError(
+      error.message === 'Request failed: 403'
+        ? 'Selected role does not match this account.'
+        : 'Invalid username or password.'
+    )
+  } finally {
+    setLoginLoading(false)
+  }
+}
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date().toLocaleString()), 1000)
@@ -566,9 +614,14 @@ const rolePermissions = {
               key={item.name}
               type="button"
               onClick={() => {
-                setRole(item.name)
-                setLanding(false)
-              }}
+  setRole(item.name)
+  setLoginError('')
+  setLoginForm({
+    username: '',
+    password: '',
+  })
+  setLanding('login')
+}}
               className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-left transition hover:border-emerald-500 hover:bg-emerald-100"
             >
               <div className="text-lg font-semibold text-emerald-900">
@@ -585,6 +638,94 @@ const rolePermissions = {
             </button>
           ))}
         </div>
+      </div>
+    </div>
+    ) : landing === 'login' ? (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-lime-50 to-white px-6">
+      <div className="w-full max-w-md rounded-3xl border border-emerald-200 bg-white/90 p-8 shadow-2xl shadow-emerald-200/60">
+
+        <div className="text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-100 px-4 py-2 text-xs uppercase tracking-[0.25em] text-emerald-800">
+            Secure Login
+          </div>
+
+          <h2 className="text-3xl font-semibold text-emerald-900">
+            {role}
+          </h2>
+
+          <p className="mt-2 text-sm text-slate-600">
+            Sign in to access RakshaConnect
+          </p>
+        </div>
+
+        <form onSubmit={handleLogin} className="mt-8 space-y-5">
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Username
+            </label>
+
+            <input
+              type="text"
+              value={loginForm.username}
+              onChange={(e) =>
+                setLoginForm((prev) => ({
+                  ...prev,
+                  username: e.target.value,
+                }))
+              }
+              placeholder="Enter username"
+              required
+              className="w-full rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-slate-900 outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Password
+            </label>
+
+            <input
+              type="password"
+              value={loginForm.password}
+              onChange={(e) =>
+                setLoginForm((prev) => ({
+                  ...prev,
+                  password: e.target.value,
+                }))
+              }
+              placeholder="Enter password"
+              required
+              className="w-full rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-slate-900 outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          {loginError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {loginError}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loginLoading}
+            className="w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loginLoading ? 'Authenticating...' : 'Login'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setLoginError('')
+              setLanding('role')
+            }}
+            className="w-full rounded-xl border border-emerald-200 px-4 py-3 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50"
+          >
+            ← Back to Role Selection
+          </button>
+
+        </form>
       </div>
     </div>
   ) : (

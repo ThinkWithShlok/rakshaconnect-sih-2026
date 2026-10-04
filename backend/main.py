@@ -9,9 +9,12 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sklearn.linear_model import LinearRegression
+from passlib.context import CryptContext
+from pydantic import BaseModel
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "logistics.db"
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 app = FastAPI(title="SmartPredict Logistics API")
 app.add_middleware(
@@ -38,6 +41,55 @@ def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+def init_users():
+    conn = get_connection()
+
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL,
+            is_active INTEGER DEFAULT 1
+        )
+        """
+    )
+
+    conn.commit()
+    conn.close()
+
+def seed_users():
+    conn = get_connection()
+
+    users = [
+        ("admin", "Admin@123", "Command / Admin"),
+        ("logistics", "Logistics@123", "Logistics Officer"),
+        ("depot", "Depot@123", "Depot Manager"),
+        ("field", "Field@123", "Field Officer"),
+    ]
+
+    for username, password, role in users:
+        existing = conn.execute(
+            "SELECT id FROM users WHERE username = ?",
+            (username,),
+        ).fetchone()
+
+        if existing is None:
+            password_hash = pwd_context.hash(password)
+
+            conn.execute(
+                """
+                INSERT INTO users
+                (username, password_hash, role, is_active)
+                VALUES (?, ?, ?, ?)
+                """,
+                (username, password_hash, role, 1),
+            )
+
+    conn.commit()
+    conn.close()
 
 
 def parse_row(row):
@@ -404,6 +456,8 @@ def startup_event():
                 seed_demo_data()
         finally:
             conn.close()
+    init_users()
+    seed_users()
 
 
 @app.get("/")
@@ -642,6 +696,59 @@ def get_analytics():
         "forecastAccuracy": {"mape": 8.2, "mae": 94.6},
     }
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+    role: str
+
+@app.post("/login")
+def login(payload: LoginRequest):
+    conn = get_connection()
+
+    user = conn.execute(
+        """
+        SELECT id, username, password_hash, role, is_active
+        FROM users
+        WHERE username = ?
+        """,
+        (payload.username,),
+    ).fetchone()
+
+    conn.close()
+
+    if user is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid username or password",
+        )
+
+    if not user["is_active"]:
+        raise HTTPException(
+            status_code=403,
+            detail="User account is inactive",
+        )
+
+    if user["role"] != payload.role:
+        raise HTTPException(
+            status_code=403,
+            detail="Selected role does not match the user account",
+        )
+
+    if not pwd_context.verify(payload.password, user["password_hash"]):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid username or password",
+        )
+
+    return {
+        "success": True,
+        "message": "Login successful",
+        "user": {
+            "id": user["id"],
+            "username": user["username"],
+            "role": user["role"],
+        },
+    }    
 
 @app.get("/health")
 def health_check():
