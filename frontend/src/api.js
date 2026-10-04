@@ -24,4 +24,8 @@ export const api = {
   getAnalytics: () => fetchJson('/analytics'),
   createShipment: (payload) => fetchJson('/shipments', { method: 'POST', body: JSON.stringify(payload) }),
   runScenario: (payload) => fetchJson('/scenario', { method: 'POST', body: JSON.stringify(payload) }),
+  login: (payload) => fetchJson('/login', {
+  method: 'POST',
+  body: JSON.stringify(payload),
+}),
 }
