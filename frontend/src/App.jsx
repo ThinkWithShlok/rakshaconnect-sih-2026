@@ -30,6 +30,25 @@ const defaultRoutes = [
 
 function App() {
   const [landing, setLanding] = useState(true)
+  const [role, setRole] = useState(null)
+  const roles = [
+  {
+    name: 'Command / Admin',
+    description: 'Full system access and operational control',
+  },
+  {
+    name: 'Logistics Officer',
+    description: 'Monitor demand, inventory, routes and shipments',
+  },
+  {
+    name: 'Depot Manager',
+    description: 'Manage depot inventory and shipment planning',
+  },
+  {
+    name: 'Field Officer',
+    description: 'Monitor field locations, inventory and alerts',
+  },
+]
   const [page, setPage] = useState('Dashboard')
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleString())
   const [locations, setLocations] = useState([])
@@ -483,14 +502,58 @@ function App() {
     </div>
   )
 
-  return landing ? (
+ return landing === true ? (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-lime-50 to-white px-6">
       <div className="w-full max-w-3xl rounded-3xl border border-emerald-200 bg-white/90 p-10 text-center shadow-2xl shadow-emerald-200/60">
         <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-emerald-300 bg-emerald-100 px-4 py-2 text-xs uppercase tracking-[0.3em] text-emerald-800">Prototype</div>
         <h1 className="text-5xl font-semibold tracking-tight text-emerald-900">RAKSHACONNECT</h1>
         <p className="mt-4 text-xl text-slate-700">Predictive Logistics & Forward Supply Chain</p>
         <p className="mt-8 text-lg text-emerald-700">Predict shortages before they happen. Optimise replenishment before supplies run out.</p>
-        <button type="button" onClick={() => setLanding(false)} className="mt-8 rounded-xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white transition hover:bg-emerald-500">Launch Command Dashboard</button>
+        <button type="button" onClick={() => setLanding('role')} className="mt-8 rounded-xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white transition hover:bg-emerald-500">Launch Command Dashboard</button>
+      </div>
+    </div>
+    ) : landing === 'role' ? (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-lime-50 to-white px-6">
+      <div className="w-full max-w-4xl rounded-3xl border border-emerald-200 bg-white/90 p-8 shadow-2xl shadow-emerald-200/60">
+        <div className="text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-100 px-4 py-2 text-xs uppercase tracking-[0.25em] text-emerald-800">
+            Secure Access
+          </div>
+
+          <h2 className="text-3xl font-semibold text-emerald-900">
+            Select Your Role
+          </h2>
+
+          <p className="mt-2 text-slate-600">
+            Choose your operational role to access RakshaConnect.
+          </p>
+        </div>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          {roles.map((item) => (
+            <button
+              key={item.name}
+              type="button"
+              onClick={() => {
+                setRole(item.name)
+                setLanding(false)
+              }}
+              className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-left transition hover:border-emerald-500 hover:bg-emerald-100"
+            >
+              <div className="text-lg font-semibold text-emerald-900">
+                {item.name}
+              </div>
+
+              <div className="mt-2 text-sm text-slate-600">
+                {item.description}
+              </div>
+
+              <div className="mt-4 text-sm font-semibold text-emerald-700">
+                Enter Dashboard →
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   ) : (
