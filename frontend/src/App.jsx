@@ -49,6 +49,37 @@ function App() {
     description: 'Monitor field locations, inventory and alerts',
   },
 ]
+const rolePermissions = {
+  'Command / Admin': [
+    'Dashboard',
+    'Demand Forecast',
+    'Inventory & Stock Risk',
+    'Logistics Map',
+    'Shipment Planning',
+    'Analytics',
+  ],
+
+  'Logistics Officer': [
+    'Dashboard',
+    'Demand Forecast',
+    'Inventory & Stock Risk',
+    'Logistics Map',
+    'Shipment Planning',
+  ],
+
+  'Depot Manager': [
+    'Dashboard',
+    'Inventory & Stock Risk',
+    'Logistics Map',
+    'Shipment Planning',
+  ],
+
+  'Field Officer': [
+    'Dashboard',
+    'Inventory & Stock Risk',
+    'Logistics Map',
+  ],
+}
   const [page, setPage] = useState('Dashboard')
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleString())
   const [locations, setLocations] = useState([])
@@ -559,7 +590,12 @@ function App() {
   ) : (
     <div className="min-h-screen bg-emerald-50 text-slate-800">
       <div className="flex min-h-screen">
-        <Sidebar currentPage={page} onPageChange={setPage} />
+       <Sidebar
+  currentPage={page}
+  onPageChange={setPage}
+  role={role}
+  permissions={rolePermissions[role] || []}
+/>
         <div className="flex flex-1 flex-col">
           <Header currentTime={currentTime} onNotificationClick={() => setPage('Dashboard')} onPageChange={setPage} />
           <main className="flex-1 space-y-6 bg-emerald-50 p-6">

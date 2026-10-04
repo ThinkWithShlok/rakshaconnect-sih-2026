@@ -15,8 +15,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl,
 })
 
-export function Sidebar({ currentPage, onPageChange }) {
-  const items = ['Dashboard', 'Demand Forecast', 'Inventory & Stock Risk', 'Logistics Map', 'Shipment Planning', 'Analytics']
+export function Sidebar({ currentPage, onPageChange, role, permissions = [] }) {
+  const items = permissions
 
   return (
     <aside className="w-72 shrink-0 border-r border-emerald-200 bg-white/90 p-5 text-emerald-900">
