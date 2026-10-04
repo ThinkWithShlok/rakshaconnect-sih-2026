@@ -2,7 +2,10 @@ const API_BASE = 'https://rakshaconnect-backend.onrender.com'
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(`${API_BASE}${url}`, {
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
     ...options,
   })
 
@@ -20,12 +23,29 @@ export const api = {
   getAlerts: () => fetchJson('/alerts'),
   getVehicles: () => fetchJson('/vehicles'),
   getShipments: () => fetchJson('/shipments'),
-  getForecast: (location, supply, period = 7) => fetchJson(`/forecast/${encodeURIComponent(location)}/${encodeURIComponent(supply)}?period=${period}`),
+
+  getForecast: (location, supply, period = 7) =>
+    fetchJson(
+      `/forecast/${encodeURIComponent(location)}/${encodeURIComponent(supply)}?period=${period}`
+    ),
+
   getAnalytics: () => fetchJson('/analytics'),
-  createShipment: (payload) => fetchJson('/shipments', { method: 'POST', body: JSON.stringify(payload) }),
-  runScenario: (payload) => fetchJson('/scenario', { method: 'POST', body: JSON.stringify(payload) }),
-  login: (payload) => fetchJson('/login', {
-  method: 'POST',
-  body: JSON.stringify(payload),
-}),
+
+  createShipment: (payload) =>
+    fetchJson('/shipments', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  runScenario: (payload) =>
+    fetchJson('/scenario', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  login: (payload) =>
+    fetchJson('/login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 }
